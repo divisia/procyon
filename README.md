@@ -1,7 +1,7 @@
 # ArduCopter | Procyon
 > ODTÜ Robot Günleri 2020, İHA Otopilot kategorisi birincisi
 
-<b>Uyarı: Kontrol yazılımı yalnızca APM2 için tasarlanmıştır.</b><br>
+<span style="color:red">**Uyarı: Kontrol yazılımı yalnızca APM2 için tasarlanmıştır.**</span><br>
 APM2 için son çıkan sürüm olan ArduCopter-3.2.1 baz alınmıştır.
 
 - Kontrol yazılımı dizini: ./ArduCopter/control_procyon.pde
