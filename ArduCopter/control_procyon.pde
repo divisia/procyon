@@ -14,8 +14,9 @@
 const unsigned int step_angle = (360 / circle_steps); // angle between steps
 
 
-int circle_next_step_x = -1;
-int circle_next_step_z = -1;
+float circle_next_step_x = 0.0f;
+float circle_next_step_z = 0.0f;
+int step_n = 1;
 
  // procyon_init - initialise flight mode
 static bool procyon_init(bool ignore_checks)
@@ -47,13 +48,30 @@ static void procyon_run()
         case Procyon_StopAboveArm:
             balletMove_init();
             break;
-
+        case Procyon_BalletMove:
+            hypotenuseMove_init();
+            break;
+        case Procyon_HypotenuseMove:
+            drawCircle_init();
+            break;
+        case Procyon_DrawCircle:
+            // closing
+            break;
         }
     }
 
     switch (procyon_state_complete) {
     case Procyon_StopAboveArm:
         stopAboveArm_run();
+        break;
+    case Procyon_BalletMove:
+        balletMove_run();
+        break;
+    case Procyon_HypotenuseMove:
+        hypotenuseMove_run();
+        break;
+    case Procyon_DrawCircle:
+        drawCircle_run();
         break;
     }
 }
@@ -92,18 +110,91 @@ static void stopAboveArm_run() {
 static void balletMove_init() {
     procyon_state_complete = false;
     procyon_state = Procyon_BalletMove;
+
+    Vector3f destination = Vector3f(500.0f, 0.0f, 200.0f); // stop by 500 cm ahead (old dest: 0-0-200)
+    wp_nav.set_wp_destination(destination);
 }
 
 static void balletMove_run() {
     wp_nav.update_wpnav();
+    pos_control.update_z_controller();
 
-    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), 1000.0f);
+    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), 2000.0f);
+
+    procyon_state_complete = wp_nav.reached_wp_destination();
+}
+
+
+static void hypotenuseMove_init(){
+    procyon_state_complete = false;
+    procyon_state = Procyon_HypotenuseMove;
+
+    Vector3f destination = Vector3f(0.0f, 0.0f, 700.0f); // stop by 700 cm above (old dest: 500-0-200)
+    wp_nav.set_wp_destination(destination);
+}
+
+static void hypotenuseMove_run(){
+    wp_nav.update_wpnav();
+    pos_control.update_z_controller();
+
+    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), 2000.0f);
+
+    procyon_state_complete = wp_nav.reached_wp_destination();
+}
+
+
+static void dejaVuDescent_init() {
+    procyon_state_complete = false;
+    procyon_state = Procyon_DejaVuDescent;
+
+    Vector3f destination = Vector3f(0.0f, 0.0f, 200.0f); // get back to st-1 (old dest: 0-0-700)
+    wp_nav.set_wp_destination(destination);
+}
+
+static void dejaVuDescent_run() {
+    wp_nav.update_wpnav();
+    pos_control.update_z_controller();
+
+    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), 2000.0f);
+
+    procyon_state_complete = wp_nav.reached_wp_destination();
+
+}
+
+
+static void drawCircle_init() {
+    procyon_state_complete = false;
+    procyon_state = Procyon_DrawCircle;
+
+    update_circle_step(step_n);
+    Vector3f destination = Vector3f(circle_next_step_x, 0.0f, circle_next_step_z); // go to first step of circle (approx. 531-0-201)
+    wp_nav.set_wp_destination(destination);
+}
+
+static void drawCircle_run() {
+
+    // update horizontal and vertical controllers
+    wp_nav.update_wpnav;
+    pos_control.update_z_controller();
+
+    // check if step complete
+    if (wp_nav.reached_wp_destination) {
+        step_n++;  // increase step number
+        if (step_n >= circle_steps) {  // if steps are complete, return state complete
+            procyon_state_complete = true;
+            return;
+        }
+        update_circle_step(step_n);
+        Vector3f destination = Vector3f(circle_next_step_x, 0.0f, circle_next_step_z);
+        wp_nav.set_wp_destination(destination);
+    }
+
 }
 
 
 static void update_circle_step(unsigned int step) {
     unsigned int desired_circle_angle = step * step_angle;
-    circle_next_step_z = sin(desired_circle_angle - 90)*circle_radius + circle_center_z;
-    circle_next_step_x = cos(desired_circle_angle - 90)*circle_radius + circle_center_x;
+    circle_next_step_z = sin((desired_circle_angle - 90)*PI / 180 /* rad-to-degrees */ ) * circle_radius + circle_center_z;
+    circle_next_step_x = cos((desired_circle_angle - 90)*PI / 180 /* rad-to-degrees */ ) * circle_radius + circle_center_x;
 }
 
