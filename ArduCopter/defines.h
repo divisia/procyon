@@ -216,7 +216,7 @@ enum ProcyonState {
     Procyon_BalletMove,
     Procyon_HypotenuseMove,
     Procyon_DejaVuDescent,
-    Procyon_DrawCircle,
+    Procyon_FireHole,
     Procyon_Greet,
 };
 

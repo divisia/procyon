@@ -48,31 +48,37 @@ static void procyon_run()
         case Procyon_StopAboveArm:
             balletMove_init();
             break;
-        case Procyon_BalletMove:
+        /*case Procyon_BalletMove:
             hypotenuseMove_init();
             break;
         case Procyon_HypotenuseMove:
-            drawCircle_init();
+            dejaVuDescent_init();
             break;
-        case Procyon_DrawCircle:
+        case Procyon_DejaVuDescent:
+            fireHole_init();
+            break;
+        case Procyon_FireHole:
             // closing
-            break;
+            break;*/
         }
     }
 
-    switch (procyon_state_complete) {
+    switch (procyon_state) {
     case Procyon_StopAboveArm:
         stopAboveArm_run();
         break;
     case Procyon_BalletMove:
         balletMove_run();
         break;
-    case Procyon_HypotenuseMove:
+    /*case Procyon_HypotenuseMove:
         hypotenuseMove_run();
         break;
-    case Procyon_DrawCircle:
-        drawCircle_run();
+    case Procyon_DejaVuDescent:
+        dejaVuDescent_run();
         break;
+    case Procyon_FireHole:
+        fireHole_run();
+        break;*/
     }
 }
 
@@ -112,7 +118,7 @@ static void balletMove_init() {
     procyon_state = Procyon_BalletMove;
 
     Vector3f destination = Vector3f(500.0f, 0.0f, 200.0f); // stop by 500 cm ahead (old dest: 0-0-200)
-    wp_nav.set_wp_destination(destination);
+    //wp_nav.set_wp_destination(destination);
 }
 
 static void balletMove_run() {
@@ -162,23 +168,23 @@ static void dejaVuDescent_run() {
 }
 
 
-static void drawCircle_init() {
+static void fireHole_init() {
     procyon_state_complete = false;
-    procyon_state = Procyon_DrawCircle;
+    procyon_state = Procyon_FireHole;
 
     update_circle_step(step_n);
     Vector3f destination = Vector3f(circle_next_step_x, 0.0f, circle_next_step_z); // go to first step of circle (approx. 531-0-201)
     wp_nav.set_wp_destination(destination);
 }
 
-static void drawCircle_run() {
+static void fireHole_run() {
 
     // update horizontal and vertical controllers
-    wp_nav.update_wpnav;
+    wp_nav.update_wpnav();
     pos_control.update_z_controller();
 
     // check if step complete
-    if (wp_nav.reached_wp_destination) {
+    if (wp_nav.reached_wp_destination()) {
         step_n++;  // increase step number
         if (step_n >= circle_steps) {  // if steps are complete, return state complete
             procyon_state_complete = true;
