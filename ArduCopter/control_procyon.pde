@@ -48,10 +48,10 @@ static void procyon_run()
         case Procyon_StopAboveArm:
             balletMove_init();
             break;
-        /*case Procyon_BalletMove:
+        case Procyon_BalletMove:
             hypotenuseMove_init();
             break;
-        case Procyon_HypotenuseMove:
+        /*case Procyon_HypotenuseMove:
             dejaVuDescent_init();
             break;
         case Procyon_DejaVuDescent:
@@ -70,10 +70,10 @@ static void procyon_run()
     case Procyon_BalletMove:
         balletMove_run();
         break;
-    /*case Procyon_HypotenuseMove:
+    case Procyon_HypotenuseMove:
         hypotenuseMove_run();
         break;
-    case Procyon_DejaVuDescent:
+    /*case Procyon_DejaVuDescent:
         dejaVuDescent_run();
         break;
     case Procyon_FireHole:
@@ -118,7 +118,7 @@ static void balletMove_init() {
     procyon_state = Procyon_BalletMove;
 
     Vector3f destination = Vector3f(500.0f, 0.0f, 200.0f); // stop by 500 cm ahead (old dest: 0-0-200)
-    //wp_nav.set_wp_destination(destination);
+    wp_nav.set_wp_destination(destination);
 }
 
 static void balletMove_run() {
@@ -135,8 +135,8 @@ static void hypotenuseMove_init(){
     procyon_state_complete = false;
     procyon_state = Procyon_HypotenuseMove;
 
-    Vector3f destination = Vector3f(0.0f, 0.0f, 700.0f); // stop by 700 cm above (old dest: 500-0-200)
-    wp_nav.set_wp_destination(destination);
+    //Vector3f destination = Vector3f(0.0f, 0.0f, 700.0f); // stop by 700 cm above (old dest: 500-0-200)
+    //wp_nav.set_wp_destination(destination);
 }
 
 static void hypotenuseMove_run(){
@@ -145,7 +145,7 @@ static void hypotenuseMove_run(){
 
     attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), 2000.0f);
 
-    procyon_state_complete = wp_nav.reached_wp_destination();
+    //procyon_state_complete = wp_nav.reached_wp_destination();
 }
 
 
