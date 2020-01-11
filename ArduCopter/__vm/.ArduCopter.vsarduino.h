@@ -1,12 +1,12 @@
-/*
+/* 
 	Editor: https://www.visualmicro.com/
 			This file is for intellisense purpose only.
 			Visual micro (and the arduino ide) ignore this code during compilation. This code is automatically maintained by visualmicro, manual changes to this file will be overwritten
 			The contents of the _vm sub folder can be deleted prior to publishing a project
 			All non-arduino files created by visual micro and all visual studio project or solution files can be freely deleted and are not required to compile a sketch (do not delete your own code!).
 			Note: debugger breakpoints are stored in '.sln' or '.asln' files, knowledge of last uploaded breakpoints is stored in the upload.vmps.xml file. Both files are required to continue a previous debug session without needing to compile and upload again
-
-	Hardware: Arduino Mega 2560 HAL (Apm 2), Platform=avr, Package=apm
+	
+	Hardware: ATmega2560 (Mega 2560) (Arduino/Genuino Mega), Platform=avr, Package=arduino
 */
 
 #if defined(_VMICRO_INTELLISENSE)
@@ -16,39 +16,76 @@
 #define __AVR_atmega2560__
 #define __AVR_ATmega2560__
 #define _VMDEBUG 1
-#define ARDUINO 10900
-#define ARDUINO_MAIN
-#define __AVR__
-#define __avr__
 #define F_CPU 16000000L
-#define __cplusplus 201103L
+#define ARDUINO 10806
+#define ARDUINO_AVR_MEGA2560
 #define ARDUINO_ARCH_AVR
-#define ARDUINO_AVR_APM_APM_AVR_APM2_2560HAL
-#define CONFIG_HAL_BOARD HAL_BOARD_APM2
-#define EXCLUDECORE
+#define __cplusplus 201103L
+#define _Pragma(x)
+#define __AVR__
 #define __inline__
-#define __asm__(x)
+#define __asm__(...)
 #define __extension__
-#define __ATTR_PURE__
-#define __ATTR_CONST__
 #define __inline__
 #define __volatile__
-#define __AVR__
-typedef void *__builtin_va_list;
+#define __cplusplus 201103L
+
+//#define GCC_VERSION 40902
+//https://www.visualmicro.com/forums/YaBB.pl?num=1569762585/5#5
+#define __GNUC__             5
+#define __GNUC_MINOR__       4
+#define __GNUC_PATCHLEVEL__  0
+#define GCC_VERSION ((__GNUC__*10000)+(__GNUC_MINOR__*100)+__GNUC_PATCHLEVEL__)) 
+
+
+#define volatile(va_arg) 
+#define _CONST
 #define __builtin_va_start
 #define __builtin_va_end
-//#define __DOXYGEN__
-#define __attribute__(x)
+#define __attribute__(...)
 #define NOINLINE __attribute__((noinline))
 #define prog_void
 #define PGM_VOID_P int
 
-#define NEW_H
 
-typedef unsigned char byte;
-extern "C" void __cxa_pure_virtual() {;}
-#undef cli
-#define cli()
+#ifndef __builtin_constant_p
+	#define __builtin_constant_p __attribute__((__const__))
+#endif
+#ifndef __builtin_strlen
+	#define __builtin_strlen  __attribute__((__const__))
+#endif
+
+
+#define NEW_H
+typedef void *__builtin_va_list;
+//extern "C" void __cxa_pure_virtual() {;}
+
+typedef int div_t;
+typedef int ldiv_t;
+
+
+typedef void *__builtin_va_list;
+//extern "C" void __cxa_pure_virtual() {;}
+
+
+
+#include "arduino.h"
+#include <pins_arduino.h> 
+//#undef F
+//#define F(string_literal) ((const PROGMEM char *)(string_literal))
+#undef PSTR
+#define PSTR(string_literal) ((const PROGMEM char *)(string_literal))
+
+//typedef unsigned char uint8_t;
+//typedef unsigned int uint8_t;
+
+#define pgm_read_byte_near(address_short) uint8_t()
+#define pgm_read_byte(address_short) uint8_t() 
+#define pgm_read_word(address_short) uint16_t() 
+#define pgm_read_dword(address_short) uint32_t()
+#define pgm_read_float(address_short) float()
+#define pgm_read_ptr(address_short)   short()
+
 #include "ArduCopter.pde"
 #include "AP_State.pde"
 #include "Attitude.pde"

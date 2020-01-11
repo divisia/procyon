@@ -13,7 +13,6 @@
 
 const unsigned int step_angle = (360 / circle_steps); // angle between steps
 
-
 float circle_next_step_x = 0.0f;
 float circle_next_step_z = 0.0f;
 int step_n = 1;
@@ -82,6 +81,18 @@ static void procyon_run()
     }
 }
 
+// position vector correction
+static Vector3f position_relative_to_initial_bearing(int initial_bearing_angle, Vector3f desired_position) {
+
+    Vector3f relative_position = Vector3f(0.0f, 0.0f, desired_position.z);
+    int init_rad = initial_bearing_angle * PI / 180;
+
+    relative_position.x = desired_position.x * cos(init_rad) - desired_position.y * sin(init_rad);
+    relative_position.y = desired_position.y * cos(init_rad) + desired_position.x * sin(init_rad);
+
+    return relative_position;
+}
+
 static void stopAboveArm_init() {
 
     procyon_state = Procyon_StopAboveArm;
@@ -89,6 +100,7 @@ static void stopAboveArm_init() {
 
     wp_nav.wp_and_spline_init();
     Vector3f destination = Vector3f(0.0f, 0.0f, 200.0f); // 200 cm above arm point
+    destination = position_relative_to_initial_bearing(initial_armed_bearing, destination);
 
     wp_nav.set_wp_destination(destination);
     set_auto_yaw_mode(AUTO_YAW_HOLD);
@@ -118,6 +130,7 @@ static void balletMove_init() {
     procyon_state = Procyon_BalletMove;
 
     Vector3f destination = Vector3f(500.0f, 0.0f, 200.0f); // stop by 500 cm ahead (old dest: 0-0-200)
+    destination = position_relative_to_initial_bearing(initial_armed_bearing, destination);
     //wp_nav.set_wp_destination(destination);
 }
 
