@@ -400,6 +400,7 @@ static void NOINLINE send_radio_out(mavlink_channel_t chan)
 
 static void NOINLINE send_vfr_hud(mavlink_channel_t chan)
 {
+
     mavlink_msg_vfr_hud_send(
         chan,
         gps.ground_speed(),

@@ -206,6 +206,30 @@ static void Log_Write_AutoTuneDetails(int16_t angle_cd, float rate_cds)
     DataFlash.WriteBlock(&pkt, sizeof(pkt));
 }
 #endif
+/*
+struct PACKED log_Procyon {
+    LOG_PACKET_HEADER;
+    uint32_t time_ms;
+    int cbp;
+    float vx;
+    float vy;
+    float vz;
+    double bearing_r;
+};
+
+// adsfsa
+static void Log_Write_Procyon(int cb, float x, float y, float z, float bear){
+    struct log_Procyon pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_PROCYON_MSG),
+        time_ms : hal.scheduler->millis(),
+        cbp : cb,
+        vx : x,
+        vy : y,
+        vz : z,
+        bearing_r : bear
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(pkt));
+}*/
 
 struct PACKED log_Current {
     LOG_PACKET_HEADER;

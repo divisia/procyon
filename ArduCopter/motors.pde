@@ -148,6 +148,7 @@ static bool init_arm_motors()
 
     initial_armed_bearing = ahrs.yaw_sensor;
 
+
     // Reset home position
     // -------------------
     if (ap.home_is_set) {

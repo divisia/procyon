@@ -4,18 +4,19 @@
  * control_procyon.cpp - ODTU otopilot yarismasi kodu
  */
 
-#define circle_radius 300.0 // cm
-#define circle_center_x 500.0 // distance cm from arm point
-#define circle_center_z 500.0 // distance cm from arm point
-#define circle_steps 60 // circle update rate
+#define LOG_PROCYON ENABLED                  // debugging for this mode
 
-#define initial_altitude 200.0 // altitude to start autonomous mode in cm
+#define circle_radius 300                    // cm
+#define circle_center_x 0                    // distance cm from arm point in x axis
+#define circle_center_z 500                  // distance cm from arm point in z axis
+#define step_total 60                        // total steps to draw a circle
+#define step_angle (360 / step_total)        // angle between steps
+double bearing_rad;                          // bearing at the time mode activated, in radians
 
-const unsigned int step_angle = (360 / circle_steps); // angle between steps
+Vector3f updated_circle_step = Vector3f(0.0f, 0.0f, 200.0f);   // new step to go in circle
+uint8_t step_n = 1;                                            // current step number
+uint8_t time_mycallback = 0;
 
-float circle_next_step_x = 0.0f;
-float circle_next_step_z = 0.0f;
-int step_n = 1;
 
  // procyon_init - initialise flight mode
 static bool procyon_init(bool ignore_checks)
@@ -29,7 +30,6 @@ static bool procyon_init(bool ignore_checks)
 }
 
 // procyon_run - runs the main controller
-// will be called at 100hz or more
 static void procyon_run()
 {
     // if not armed or throttle at zero, set throttle to zero and exit immediately
@@ -50,13 +50,13 @@ static void procyon_run()
         case Procyon_BalletMove:
             hypotenuseMove_init();
             break;
-        /*case Procyon_HypotenuseMove:
+        case Procyon_HypotenuseMove:
             dejaVuDescent_init();
             break;
         case Procyon_DejaVuDescent:
             fireHole_init();
             break;
-        case Procyon_FireHole:
+            /*case Procyon_FireHole:
             // closing
             break;*/
         }
@@ -72,25 +72,26 @@ static void procyon_run()
     case Procyon_HypotenuseMove:
         hypotenuseMove_run();
         break;
-    /*case Procyon_DejaVuDescent:
+    case Procyon_DejaVuDescent:
         dejaVuDescent_run();
         break;
     case Procyon_FireHole:
         fireHole_run();
-        break;*/
+        break;
     }
 }
 
+
 // position vector correction
-static Vector3f position_relative_to_initial_bearing(int initial_bearing_angle, Vector3f desired_position) {
+static void position_relative_to_initial_bearing(Vector3f &d_pos) {
+    float x = d_pos.x;
+    float y = d_pos.y;
+    float z = d_pos.z;
 
-    Vector3f relative_position = Vector3f(0.0f, 0.0f, desired_position.z);
-    int init_rad = initial_bearing_angle * PI / 180;
+    d_pos.x = x * (float)cos(bearing_rad) - y * (float)sin(bearing_rad);
+    d_pos.y = y * (float)cos(bearing_rad) + x * (float)sin(bearing_rad);
 
-    relative_position.x = desired_position.x * cos(init_rad) - desired_position.y * sin(init_rad);
-    relative_position.y = desired_position.y * cos(init_rad) + desired_position.x * sin(init_rad);
-
-    return relative_position;
+    time_mycallback+5;
 }
 
 static void stopAboveArm_init() {
@@ -98,29 +99,24 @@ static void stopAboveArm_init() {
     procyon_state = Procyon_StopAboveArm;
     procyon_state_complete = false;
 
+    bearing_rad = float(ahrs.yaw_sensor / 100.0f) * DEG_TO_RAD;
+
+    set_auto_yaw_mode(AUTO_YAW_HOLD);
+    wp_nav.set_fast_waypoint(false);
+
     wp_nav.wp_and_spline_init();
-    Vector3f destination = Vector3f(0.0f, 0.0f, 200.0f); // 200 cm above arm point
-    destination = position_relative_to_initial_bearing(initial_armed_bearing, destination);
+    Vector3f destination = (Vector3f(0.0f, 0.0f, 200.0f)); // 200 cm above arm point
+    position_relative_to_initial_bearing(destination);
 
     wp_nav.set_wp_destination(destination);
-    set_auto_yaw_mode(AUTO_YAW_HOLD);
 }
 
 static void stopAboveArm_run() {
-
-    /*
-    TBD:
-    arming check
-    landing check
-
-    yaw rate is not needed here.
-    */
 
     wp_nav.update_wpnav();
     pos_control.update_z_controller();
 
     attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), 0.0f);
-
     procyon_state_complete = wp_nav.reached_wp_destination();
 }
 
@@ -129,9 +125,11 @@ static void balletMove_init() {
     procyon_state_complete = false;
     procyon_state = Procyon_BalletMove;
 
-    Vector3f destination = Vector3f(500.0f, 0.0f, 200.0f); // stop by 500 cm ahead (old dest: 0-0-200)
-    destination = position_relative_to_initial_bearing(initial_armed_bearing, destination);
-    //wp_nav.set_wp_destination(destination);
+    // stop by 500 cm ahead (old dest: 0-0-200)
+    Vector3f destination = Vector3f(500.0f, 0.0f, 200.0f);
+    position_relative_to_initial_bearing(destination);
+
+    wp_nav.set_wp_destination(destination);
 }
 
 static void balletMove_run() {
@@ -148,8 +146,9 @@ static void hypotenuseMove_init(){
     procyon_state_complete = false;
     procyon_state = Procyon_HypotenuseMove;
 
-    //Vector3f destination = Vector3f(0.0f, 0.0f, 700.0f); // stop by 700 cm above (old dest: 500-0-200)
-    //wp_nav.set_wp_destination(destination);
+    Vector3f destination = Vector3f(0.0f, 0.0f, 700.0f); // stop by 700 cm above (old dest: 500-0-200)
+    position_relative_to_initial_bearing(destination);
+    wp_nav.set_wp_destination(destination);
 }
 
 static void hypotenuseMove_run(){
@@ -158,7 +157,7 @@ static void hypotenuseMove_run(){
 
     attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), 2000.0f);
 
-    //procyon_state_complete = wp_nav.reached_wp_destination();
+    procyon_state_complete = wp_nav.reached_wp_destination();
 }
 
 
@@ -167,6 +166,7 @@ static void dejaVuDescent_init() {
     procyon_state = Procyon_DejaVuDescent;
 
     Vector3f destination = Vector3f(0.0f, 0.0f, 200.0f); // get back to st-1 (old dest: 0-0-700)
+    position_relative_to_initial_bearing(destination);
     wp_nav.set_wp_destination(destination);
 }
 
@@ -185,9 +185,8 @@ static void fireHole_init() {
     procyon_state_complete = false;
     procyon_state = Procyon_FireHole;
 
-    update_circle_step(step_n);
-    Vector3f destination = Vector3f(circle_next_step_x, 0.0f, circle_next_step_z); // go to first step of circle (approx. 531-0-201)
-    wp_nav.set_wp_destination(destination);
+    update_circle_step();
+    wp_nav.set_wp_destination(updated_circle_step);
 }
 
 static void fireHole_run() {
@@ -199,21 +198,25 @@ static void fireHole_run() {
     // check if step complete
     if (wp_nav.reached_wp_destination()) {
         step_n++;  // increase step number
-        if (step_n >= circle_steps) {  // if steps are complete, return state complete
+        if (step_n >= step_total) {  // if steps are complete, return state complete
             procyon_state_complete = true;
             return;
         }
-        update_circle_step(step_n);
-        Vector3f destination = Vector3f(circle_next_step_x, 0.0f, circle_next_step_z);
-        wp_nav.set_wp_destination(destination);
+        update_circle_step();
+        wp_nav.set_wp_destination(updated_circle_step);
     }
 
 }
 
 
-static void update_circle_step(unsigned int step) {
-    unsigned int desired_circle_angle = step * step_angle;
-    circle_next_step_z = sin((desired_circle_angle - 90)*PI / 180 /* rad-to-degrees */ ) * circle_radius + circle_center_z;
-    circle_next_step_x = cos((desired_circle_angle - 90)*PI / 180 /* rad-to-degrees */ ) * circle_radius + circle_center_x;
+static void update_circle_step() {
+    int desired_circle_angle = (step_n * step_angle);
+
+#if LOG_PROCYON
+    Log_Write_Data((uint8_t)step_n, (int16_t)desired_circle_angle);
+#endif
+
+    updated_circle_step.z = sin((desired_circle_angle - 90) * DEG_TO_RAD) * circle_radius + circle_center_z;
+    updated_circle_step.x = cos((desired_circle_angle - 90) * DEG_TO_RAD) * circle_radius + circle_center_x;
 }
 
