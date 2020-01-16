@@ -6,6 +6,7 @@
 
 #define LOG_PROCYON ENABLED                  // debugging for this mode
 
+#define GENERIC_YAW_RATE 2000.0f             // yaw rate to use in all mission steps [-4500 ~ 4500]
 #define circle_radius 300                    // cm
 #define circle_center_x 0                    // distance cm from arm point in x axis
 #define circle_center_z 500                  // distance cm from arm point in z axis
@@ -56,9 +57,9 @@ static void procyon_run()
         case Procyon_DejaVuDescent:
             fireHole_init();
             break;
-            /*case Procyon_FireHole:
-            // closing
-            break;*/
+        case Procyon_FireHole:
+            // todo: do something cool - closing
+            break;
         }
     }
 
@@ -136,7 +137,7 @@ static void balletMove_run() {
     wp_nav.update_wpnav();
     pos_control.update_z_controller();
 
-    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), 2000.0f);
+    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), GENERIC_YAW_RATE);
 
     procyon_state_complete = wp_nav.reached_wp_destination();
 }
@@ -155,7 +156,7 @@ static void hypotenuseMove_run(){
     wp_nav.update_wpnav();
     pos_control.update_z_controller();
 
-    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), 2000.0f);
+    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), GENERIC_YAW_RATE);
 
     procyon_state_complete = wp_nav.reached_wp_destination();
 }
@@ -174,7 +175,7 @@ static void dejaVuDescent_run() {
     wp_nav.update_wpnav();
     pos_control.update_z_controller();
 
-    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), 2000.0f);
+    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), GENERIC_YAW_RATE);
 
     procyon_state_complete = wp_nav.reached_wp_destination();
 
@@ -186,6 +187,7 @@ static void fireHole_init() {
     procyon_state = Procyon_FireHole;
 
     update_circle_step();
+    position_relative_to_initial_bearing(updated_circle_step);
     wp_nav.set_wp_destination(updated_circle_step);
 }
 
@@ -194,6 +196,7 @@ static void fireHole_run() {
     // update horizontal and vertical controllers
     wp_nav.update_wpnav();
     pos_control.update_z_controller();
+    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), GENERIC_YAW_RATE);
 
     // check if step complete
     if (wp_nav.reached_wp_destination()) {
@@ -203,6 +206,7 @@ static void fireHole_run() {
             return;
         }
         update_circle_step();
+        position_relative_to_initial_bearing(updated_circle_step);
         wp_nav.set_wp_destination(updated_circle_step);
     }
 
