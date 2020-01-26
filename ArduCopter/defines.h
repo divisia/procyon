@@ -217,7 +217,7 @@ enum ProcyonState {
     Procyon_HypotenuseMove,
     Procyon_DejaVuDescent,
     Procyon_FireHole,
-    Procyon_Greet,
+    Procyon_LordHasFallen,
 };
 
 // Flip states

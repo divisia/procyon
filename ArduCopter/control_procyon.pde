@@ -6,7 +6,7 @@
 
 #define LOG_PROCYON ENABLED                  // debugging for this mode
 
-#define GENERIC_YAW_RATE 2000.0f             // yaw rate to use in all mission steps [-4500 ~ 4500]
+#define GENERIC_YAW_RATE 4500.0f             // yaw rate to use in all mission steps [-4500 ~ 4500]
 #define circle_radius 300                    // cm
 #define circle_center_x 0                    // distance cm from arm point in x axis
 #define circle_center_z 500                  // distance cm from arm point in z axis
@@ -58,7 +58,7 @@ static void procyon_run()
             fireHole_init();
             break;
         case Procyon_FireHole:
-            // todo: do something cool - closing
+            lordHasFallen_init();
             break;
         }
     }
@@ -78,6 +78,9 @@ static void procyon_run()
         break;
     case Procyon_FireHole:
         fireHole_run();
+        break;
+    case Procyon_LordHasFallen:
+        lordHasFallen_run();
         break;
     }
 }
@@ -201,7 +204,7 @@ static void fireHole_run() {
     // check if step complete
     if (wp_nav.reached_wp_destination()) {
         step_n++;  // increase step number
-        if (step_n >= step_total) {  // if steps are complete, return state complete
+        if (step_n > step_total) {  // if steps are complete, return state complete
             procyon_state_complete = true;
             return;
         }
@@ -212,7 +215,6 @@ static void fireHole_run() {
 
 }
 
-
 static void update_circle_step() {
     int desired_circle_angle = (step_n * step_angle);
 
@@ -222,5 +224,32 @@ static void update_circle_step() {
 
     updated_circle_step.z = sin((desired_circle_angle - 90) * DEG_TO_RAD) * circle_radius + circle_center_z;
     updated_circle_step.x = cos((desired_circle_angle - 90) * DEG_TO_RAD) * circle_radius + circle_center_x;
+}
+
+
+static void lordHasFallen_init() {
+    procyon_state_complete = false;
+    procyon_state = Procyon_LordHasFallen;
+
+}
+
+static void lordHasFallen_run() {
+
+    // Check if mission has been accomlished
+    if (!ap.auto_armed || ap.land_complete) {
+        attitude_control.relax_bf_rate_controller();
+        attitude_control.set_yaw_target_to_current_heading();
+        attitude_control.set_throttle_out(0, false);
+
+        // If the landing is complete, auto disarm motors
+        if (ap.land_complete) {
+            init_disarm_motors();
+        }
+        return;
+    }
+
+    float landing_rate = get_throttle_land();
+    pos_control.set_alt_target_from_climb_rate(landing_rate, G_Dt, true);
+    pos_control.update_z_controller();
 }
 
