@@ -4,13 +4,13 @@
  * control_procyon.cpp - ODTU otopilot yarismasi kodu
  */
 
-#define LOG_PROCYON ENABLED                  // debugging for this mode
+#define LOG_PROCYON 0                  // debugging for this mode
 
 #define GENERIC_YAW_RATE 4500.0f             // yaw rate to use in all mission steps [-4500 ~ 4500]
 #define circle_radius 300                    // cm
 #define circle_center_x 0                    // distance cm from arm point in x axis
 #define circle_center_z 500                  // distance cm from arm point in z axis
-#define step_total 60                        // total steps to draw a circle
+#define step_total 30                        // total steps to draw a circle
 #define step_angle (360 / step_total)        // angle between steps
 double bearing_rad;                          // bearing at the time mode activated, in radians
 double bearing_deg;                          // bearing at the time mode activated, in degrees
